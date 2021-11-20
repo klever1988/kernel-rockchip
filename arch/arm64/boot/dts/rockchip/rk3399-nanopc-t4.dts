@@ -13,7 +13,7 @@
 
 / {
 	model = "FriendlyElec NanoPC-T4";
-	compatible = "friendlyarm,nanopc-t4", "rockchip,rk3399";
+	compatible = "friendlyelec,nanopc-t4", "rockchip,rk3399";
 
 	vcc12v0_sys: vcc12v0-sys {
 		compatible = "regulator-fixed";
@@ -92,6 +92,11 @@
 			cooling-device = <&fan 2 THERMAL_NO_LIMIT>;
 		};
 	};
+};
+
+&mach {
+	hwrev = <0>;
+	model = "NanoPC-T4";
 };
 
 &pinctrl {

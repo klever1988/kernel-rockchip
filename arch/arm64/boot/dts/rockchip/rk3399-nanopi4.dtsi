@@ -13,12 +13,21 @@
 
 /dts-v1/;
 #include <dt-bindings/input/linux-event-codes.h>
+#include <dt-bindings/soc/rockchip,suspend.h>
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
 
 / {
-	chosen {
+	chosen: chosen {
+		bootargs = "swiotlb=1 coherent_pool=1m";
 		stdout-path = "serial2:1500000n8";
+	};
+
+	mach: board {
+		compatible = "friendlyelec,board";
+		machine = "NANOPI4";
+		hwrev = <255>;
+		model = "NanoPi 4 Series";
 	};
 
 	clkin_gmac: external-gmac-clock {
@@ -78,11 +87,11 @@
 		regulator-name = "vbus_typec";
 	};
 
-	gpio-keys {
+	keys: gpio-keys {
 		compatible = "gpio-keys";
 		autorepeat;
 		pinctrl-names = "default";
-		pinctrl-0 = <&power_key>;
+		pinctrl-0 = <&key_pins>;
 
 		power {
 			debounce-interval = <100>;
@@ -103,6 +112,36 @@
 			label = "status_led";
 			linux,default-trigger = "heartbeat";
 		};
+	};
+
+	pm_config: rockchip-suspend {
+		compatible = "rockchip,pm-rk3399";
+		rockchip,sleep-debug-en = <1>;
+		rockchip,sleep-mode-config = <
+			(0
+			| RKPM_SLP_ARMPD
+			| RKPM_SLP_PERILPPD
+			| RKPM_SLP_DDR_RET
+			| RKPM_SLP_PLLPD
+			| RKPM_SLP_CENTER_PD
+			| RKPM_SLP_AP_PWROFF
+			)
+			>;
+		rockchip,wakeup-config = <
+			(0
+			| RKPM_GPIO_WKUP_EN
+			| RKPM_PWM_WKUP_EN
+			)
+			>;
+		rockchip,pwm-regulator-config = <
+			(0
+			| PWM2_REGULATOR_EN
+			)
+			>;
+		rockchip,power-ctrl =
+			<&gpio1 17 GPIO_ACTIVE_HIGH>,
+			<&gpio1 14 GPIO_ACTIVE_HIGH>;
+		status = "okay";
 	};
 
 	sdio_pwrseq: sdio-pwrseq {
@@ -467,6 +506,10 @@
 	status = "okay";
 };
 
+&reboot_mode {
+	status = "okay";
+};
+
 &pcie_phy {
 	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
 	assigned-clock-rates = <100000000>;
@@ -519,7 +562,7 @@
 	};
 
 	rockchip-key {
-		power_key: power-key {
+		key_pins: key-pins {
 			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
@@ -570,6 +613,10 @@
 &pwm2 {
 	pinctrl-names = "active";
 	pinctrl-0 = <&pwm2_pin_pull_down>;
+	status = "okay";
+};
+
+&rng {
 	status = "okay";
 };
 
@@ -685,10 +732,14 @@
 };
 
 &usbdrd_dwc3_0 {
+	snps,xhci-slow-suspend-quirk;
+	snps,xhci-trb-ent-quirk;
 	status = "okay";
 };
 
 &usbdrd_dwc3_1 {
+	snps,xhci-slow-suspend-quirk;
+	snps,xhci-trb-ent-quirk;
 	dr_mode = "host";
 	status = "okay";
 };

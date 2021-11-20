@@ -3623,6 +3623,7 @@ int kvmhv_p9_guest_entry(struct kvm_vcpu *vcpu, u64 time_limit,
 		if (trap == BOOK3S_INTERRUPT_SYSCALL && !vcpu->arch.nested &&
 		    kvmppc_get_gpr(vcpu, 3) == H_CEDE) {
 			kvmppc_nested_cede(vcpu);
+			kvmppc_set_gpr(vcpu, 3, 0);
 			trap = 0;
 		}
 	} else {
@@ -5189,6 +5190,12 @@ static long kvm_arch_vm_ioctl_hv(struct file *filp,
 
 	case KVM_PPC_ALLOCATE_HTAB: {
 		u32 htab_order;
+
+		/* If we're a nested hypervisor, we currently only support radix */
+		if (kvmhv_on_pseries()) {
+			r = -EOPNOTSUPP;
+			break;
+		}
 
 		r = -EFAULT;
 		if (get_user(htab_order, (u32 __user *)argp))
